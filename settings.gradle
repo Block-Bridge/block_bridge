@@ -1,0 +1,21 @@
+rootProject.name = 'block_bridge'
+
+include "api"
+include "paper"
+include "fabric"
+include "discord"
+
+gradle.beforeProject {
+    project -> if (project.name == 'fabric') {
+        pluginManagement {
+            repositories {
+                maven {
+                    name = 'Fabric'
+                    url = 'https://maven.fabricmc.net/'
+                }
+                gradlePluginPortal()
+            }
+        }
+    }
+}
+

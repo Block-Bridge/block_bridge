@@ -1,0 +1,72 @@
+plugins {
+    id 'java'
+    id "com.modrinth.minotaur" version "$minotaur_version"
+    id 'maven-publish'
+}
+
+group = rootProject.group
+version = "$release_version-$minecraft_version-$build_status-B$build_number"
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "spigotmc-repo"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+}
+dependencies {
+}
+
+def targetJavaVersion = Integer.parseInt("${java_version}")
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = 'localRepo'
+            url = layout.buildDirectory.dir("repo")
+        }
+    }
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    def log = System.getenv("CHANGELOG")
+    if(log != null) changelog = log
+    else changelog = file("changelog.md").text
+    projectId = "${modrinth_id}"
+    versionNumber = "${release_version}"
+    versionType = "${build_status}"
+    uploadFile = jar
+    loaders = ["paper"]
+    syncBodyFrom = file("readme.md").text
+//    changelog = file("changelog.md").text
+    dependencies {
+    }
+}
+
+tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
