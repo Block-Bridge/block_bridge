@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(":api")
+    implementation("net.dv8tion:JDA:$jda_version")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("org.json:json:$json_version")
+}
+
+base {
+    archivesName = rootProject.name + "-" + project.module_name + "-" + rootProject.version
+}
+//apply plugin: "com.gradleup.shadow"
+
+def targetJavaVersion = Integer.parseInt("${java_version}")
+java {
+    withSourcesJar()
+    withJavadocJar()
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+task runBot(type: JavaExec) {
+    group = 'discord'
+    description = 'Runs the bot'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "me.quickscythe.blockbridge.discord.BlockBridgeDiscord"
+    jvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005']
+    def folder = file('./run/')
+    if (!folder.exists()) {
+        mkdir folder
+        println "Folder created: ${folder}"
+    } else {
+        println "Folder already exists: ${folder}"
+    }
+    workingDir(folder)
+}

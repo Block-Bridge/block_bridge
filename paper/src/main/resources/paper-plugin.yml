@@ -1,0 +1,4 @@
+name: BlockBridge
+version: '0.0.1'
+main: me.quickscythe.blockbridge.BlockBridgePaper
+api-version: '1.21'
