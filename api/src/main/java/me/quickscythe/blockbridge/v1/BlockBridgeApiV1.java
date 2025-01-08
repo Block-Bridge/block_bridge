@@ -56,6 +56,7 @@ public class BlockBridgeApiV1 extends ConfigClass implements BlockBridgeApi {
         }));
     }
 
+
     @Override
     public void validateToken() {
         logger.info("Validating Token: {}", token);
